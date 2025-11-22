@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>امتحان وراثة (تجريبي)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background-color: #111827; /* خلفية داكنة */
+        }
+        
+        .ltr-text {
+            direction: ltr;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .basmalah-font {
+            font-family: 'Amiri', serif;
+        }
+
+        .option-label {
+            background-color: #1f2937; 
+            border: 2px solid #374151; 
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        
+        /* تأثيرات التفاعل */
+        .interactive:hover {
+            background-color: #374151;
+            border-color: #60a5fa;
+        }
+        
+        /* عند الاختيار */
+        input:checked + div {
+            border-color: #3b82f6;
+            background-color: #1e3a8a;
+        }
+
+        /* أنماط التصحيح للمراجعة */
+        .correct-answer {
+            background-color: #065f46 !important; /* أخضر داكن */
+            border-color: #10b981 !important; /* إطار أخضر فاتح */
+        }
+        
+        .wrong-answer {
+            background-color: #7f1d1d !important; /* أحمر داكن */
+            border-color: #ef4444 !important; /* إطار أحمر فاتح */
+        }
+        
+        input[type="radio"] { display: none; }
+
+        .progress-bar { transition: width 0.2s ease; }
+        
+        .glow-green {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+            border-color: #10b981;
+        }
+        
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563; 
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-100 flex items-center justify-center p-4">
+
+    <div class="max-w-lg w-full bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-800 relative flex flex-col" style="height: 85vh; max-height: 800px;">
+        
+        <!-- شاشة الترحيب -->
+        <div id="welcome-screen" class="absolute inset-0 z-20 bg-gray-900 flex flex-col items-center justify-center p-8 text-center">
+            
+            <!-- العبارة المضافة في الأعلى (سمائي) -->
+            <div class="mb-8 text-cyan-500 basmalah-font text-xl md:text-2xl font-bold leading-loose tracking-wide">
+                بِسْمِ اللهِ وَالْحَمْدُ للهِ الَّذِي خَلَقَنَا وَنَرْجِعُ إِلَيْهِ
+            </div>
+
+            <div class="mb-6 p-4 bg-blue-900/30 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.2-2.858.567-4.181m-3.23 12.207c.784-2.202 1.663-4.23 2.607-6.023" />
+                </svg>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold mb-4 text-white">امتحان وراثة (تجريبي)</h1>
+            
+            <p class="text-gray-400 mb-8 max-w-xs mx-auto text-sm md:text-base font-medium">أسئلة متكونة من 50 سؤال تقيس الفهم والقراءة.</p>
+            
+            <div class="w-full max-w-xs space-y-4">
+                <div>
+                    <label class="block text-right text-sm font-medium text-gray-300 mb-2">الاسم:</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-right" placeholder="أدخل اسمك هنا...">
+                    <p id="name-error" class="text-red-500 text-sm mt-1 hidden text-right">يرجى كتابة الاسم للبدء</p>
+                </div>
+                <button onclick="startQuiz()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition transform hover:scale-[1.02]">
+                    ابدأ الاختبار
+                </button>
+            </div>
+        </div>
+
+        <!-- شاشة الاختبار / المراجعة -->
+        <div id="quiz-screen" class="flex-1 flex flex-col hidden relative z-10 h-full">
+            <!-- الهيدر -->
+            <div class="p-5 bg-gray-800 border-b border-gray-700 flex-shrink-0">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-sm text-gray-400" id="question-counter">سؤال <span id="current-q-num" class="text-white font-bold text-lg">1</span> من <span id="total-q-num">50</span></div>
+                    <div class="text-sm font-semibold text-blue-400" id="display-name"></div>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- حاوية الأسئلة -->
+            <div id="scroll-container" class="flex-1 p-5 md:p-8 overflow-y-auto ltr-text">
+                <div id="question-container">
+                    <!-- سيتم وضع السؤال الحالي هنا -->
+                </div>
+                
+                <!-- حاوية المراجعة -->
+                <div id="review-container" class="hidden space-y-8">
+                    <!-- سيتم ملؤها بجميع الأسئلة المصححة -->
+                </div>
+            </div>
+
+            <!-- الفوتر -->
+            <div class="p-5 bg-gray-800 border-t border-gray-700 flex justify-between items-center flex-shrink-0">
+                <button id="back-score-btn" onclick="showScoreScreen()" class="hidden px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-bold w-full">
+                    عودة للنتيجة
+                </button>
+            </div>
+        </div>
+
+        <!-- شاشة النتيجة -->
+        <div id="result-screen" class="absolute inset-0 z-30 bg-gray-900 hidden flex flex-col items-center justify-center p-8 text-center">
+            
+            <!-- عرض اسم الطالب هنا -->
+            <div class="mb-6 bg-gray-800/50 px-6 py-3 rounded-xl border border-gray-700">
+                <p class="text-gray-400 text-sm mb-1">الطالب / الطالبة</p>
+                <h2 id="result-student-name" class="text-2xl md:text-3xl font-bold text-blue-400"></h2>
+            </div>
+
+            <div class="mb-6 p-6 bg-gray-800 rounded-full border-4 border-gray-700 transition-all duration-500" id="score-circle">
+                <div class="flex flex-col items-center justify-center w-32 h-32 md:w-40 md:h-40">
+                    <span id="final-score" class="text-5xl md:text-6xl font-bold text-white">0</span>
+                    <span class="text-xl text-gray-400 mt-2">/ 100</span>
+                </div>
+            </div>
+            <h2 id="result-message" class="text-2xl md:text-3xl font-bold mb-4 text-white"></h2>
+            <p id="result-submessage" class="text-lg md:text-xl text-gray-300 mb-8"></p>
+            
+            <button onclick="reviewAnswers()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition shadow-lg transform hover:scale-105">
+                راجع إجاباتك 🔍
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- مصفوفة الأسئلة (50 سؤال) ---
+        const questionsData = [
+            { q: "Which pair of nitrogenous bases in the DNA double helix is held together by three hydrogen bonds?", options: { a: "Adenine and Thymine", b: "Guanine and Cytosine", c: "Adenine and Guanine", d: "Thymine and Cytosine" }, correct: "b" },
+            { q: "Which structural component of a gene is initially transcribed but is subsequently spliced out of the messenger RNA (mRNA) before translation?", options: { a: "Exon", b: "Promoter Region", c: "Codon", d: "Intron" }, correct: "d" },
+            { q: "The antiparallel orientation of the two DNA strands is fundamentally determined by the opposite arrangement of which molecular component?", options: { a: "Nitrogenous Bases", b: "Phosphate Groups", c: "Deoxyribose Sugars", d: "Histone Proteins" }, correct: "c" },
+            { q: "In Mendelian inheritance, the condition where a heterozygote expresses a blended or intermediate trait (e.g., sickle cell trait) is known as:", options: { a: "Codominance", b: "Dominant Inheritance", c: "Incomplete Dominance", d: "X-linked Inheritance" }, correct: "c" },
+            { q: "A structural chromosome abnormality that involves a segment being reversed and includes the centromere is specifically classified as:", options: { a: "Paracentric Inversion", b: "Translocation", c: "Pericentric Inversion", d: "Duplication" }, correct: "c" },
+            { q: "Phenylketonuria (PKU) results from the deficiency of which specific enzyme, leading to the toxic buildup of phenylalanine?", options: { a: "Glucocerebrosidase", b: "Hexosaminidase A", c: "Phenylalanine Hydroxylase", d: "Iduronate-2-sulfatase" }, correct: "c" },
+            { q: "Which protective caps at the ends of chromosomes are responsible for preventing the loss of genetic information during DNA replication and are associated with cellular aging?", options: { a: "Centromeres", b: "Telomeres", c: "Chromatin", d: "Exons" }, correct: "b" },
+            { q: "The biological process of Meiosis is essential for producing germ cells (sperm and egg) by ensuring which key outcome?", options: { a: "Two genetically identical daughter cells", b: "Replication of somatic cells", c: "Reduction of the chromosome number by half", d: "Synthesis of new proteins" }, correct: "c" },
+            { q: "A Point Mutation that alters a codon for an amino acid into a premature STOP signal is most specifically termed a:", options: { a: "Missense mutation", b: "Frameshift mutation", c: "Nonsense mutation", d: "Silent mutation" }, correct: "c" },
+            { q: "The specific regulatory sequence located at the start of a gene that signals the initiation point for transcription is the:", options: { a: "Codon", b: "Telomere", c: "Intron", d: "Promoter Region" }, correct: "d" },
+            { q: "Which numerical chromosomal abnormality involves the presence of a chromosome number that is not an exact multiple of the haploid number (e.g., Trisomy 21)?", options: { a: "Monogenic Disorder", b: "Aneuploidy", c: "Multifactorial Disease", d: "Codominance" }, correct: "b" },
+            { q: "During DNA replication, which enzyme is required to create a short RNA primer to allow DNA polymerase to begin the elongation process?", options: { a: "DNA Polymerase", b: "Helicase", c: "Primase", d: "Ligase" }, correct: "c" },
+            { q: "Diseases such as Heart Disease and Type 2 Diabetes are classified as:", options: { a: "Single-Gene Disorders", b: "Chromosomal Disorders", c: "Mitochondrial Disorders", d: "Multifactorial Diseases" }, correct: "d" },
+            { q: "X-linked recessive disorders are often more common and severe in males because:", options: { a: "They inherit two X chromosomes", b: "They only have one X chromosome (hemizygous)", c: "They have two Y chromosomes", d: "They can only inherit the disorder from the father" }, correct: "b" },
+            { q: "Tay-Sachs disease is caused by an enzyme deficiency leading to the neurotoxic accumulation of which specific lipid in nerve cells?", options: { a: "Glucocerebroside", b: "GM2 Ganglioside", c: "Glycosaminoglycans (GAGs)", d: "Phenylalanine" }, correct: "b" },
+            { q: "The clinical effectiveness of the cancer treatment Herceptin (trastuzumab) is directly correlated with which specific genetic event in the tumor cells?", options: { a: "A point mutation in the HER2 gene", b: "A deletion of the HER2 gene", c: "Gene amplification of the HER2 receptor", d: "A loss of heterozygosity (LOH) event" }, correct: "c" },
+            { q: "The Philadelphia chromosome, a hallmark of Chronic Myelogenous Leukemia (CML), is a classic example of which type of structural chromosomal abnormality?", options: { a: "Duplication", b: "Inversion", c: "Translocation", d: "Deletion" }, correct: "c" },
+            { q: "In the structure of a gene, the regions that contain the instructions and will be translated into the final protein sequence are known as:", options: { a: "Introns", b: "Promoter Regions", c: "Telomeres", d: "Exons" }, correct: "d" },
+            { q: "Klinefelter Syndrome (47, XXY) in males most commonly results in which of the following clinical features?", options: { a: "Short stature and webbed neck", b: "Tall stature, infertility, and reduced testosterone production", c: "Severe intellectual disability and heart defects", d: "Cat-like cry and microcephaly" }, correct: "b" },
+            { q: "Epigenetics is defined as the study of changes in gene expression that:", options: { a: "Alter the underlying DNA sequence", b: "Occur without altering the underlying DNA sequence", c: "Only affect mitochondrial genes", d: "Are caused solely by genetic mutations" }, correct: "b" },
+            { q: "DNA Polymerase adds new nucleotides to a growing strand exclusively in which specific direction?", options: { a: "3′→5′ direction", b: "5′→3′ direction", c: "Both 5′→3′ and 3′→5′ directions", d: "In a random direction" }, correct: "b" },
+            { q: "Ornithine Transcarboxylase (OTC) Deficiency is a defect in the urea cycle, leading to the dangerous accumulation of which toxic compound?", options: { a: "Glucose", b: "Ammonia", c: "Fatty acids", d: "Lactose" }, correct: "b" },
+            { q: "Which inheritance pattern requires two copies of the altered gene (one from each parent) to cause the disease, such as in the case of Cystic Fibrosis?", options: { a: "Autosomal Dominant", b: "X-linked Dominant", c: "Autosomal Recessive", d: "Codominance" }, correct: "c" },
+            { q: "The syndrome characterized by intellectual disability, microcephaly, and a distinctive \"cat-like cry\" is caused by a deletion on chromosome 5. What is this condition called?", options: { a: "Down Syndrome", b: "Cri-du-chat Syndrome", c: "Patau Syndrome", d: "Turner Syndrome" }, correct: "b" },
+            { q: "Gaucher Disease, a lipid storage disorder, results from the deficiency of which enzyme?", options: { a: "Phenylalanine hydroxylase", b: "Glucocerebrosidase", c: "Hexosaminidase A", d: "Iduronate-2-sulfatase" }, correct: "b" },
+            { q: "Turner Syndrome (45, X), a sex chromosome monosomy in females, is clinically characterized by which features?", options: { a: "Tall stature and reduced testosterone", b: "Short stature and infertility", c: "Severe neurological degeneration", d: "Intellectual disability and characteristic facial features" }, correct: "b" },
+            { q: "Which molecule directly serves as the template for protein synthesis (Translation) in the ribosome?", options: { a: "DNA", b: "Transfer RNA (tRNA)", c: "Messenger RNA (mRNA)", d: "Ribosomal RNA (rRNA)" }, correct: "c" },
+            { q: "The primary goal of a Karyotype analysis is to visually arrange and assess chromosomes based on which criteria?", options: { a: "Gene sequence only", b: "Protein function and structure", c: "Size, banding patterns, and centromere position", d: "DNA replication rate" }, correct: "c" },
+            { q: "Disorders like Leber's hereditary optic neuropathy are examples of Mitochondrial Inheritance, meaning the DNA mutation is inherited:", options: { a: "Equally from both parents", b: "Exclusively through the mother", c: "Only from the father", d: "Only from somatic cells" }, correct: "b" },
+            { q: "Enhancers and silencers are regulatory elements whose primary role is to control which aspect of a gene?", options: { a: "When, where, and how much a gene is expressed", b: "The base pairing rules in DNA", c: "The structure of the chromosome itself", d: "The splicing of introns" }, correct: "a" },
+            { q: "Which specific Trisomy (extra copy of a chromosome) is characterized by severe intellectual disability and extremely low survival rates, often not beyond the first year of life?", options: { a: "Trisomy 21 (Down Syndrome)", b: "Trisomy 18 (Edwards Syndrome)", c: "Trisomy 13 (Patau Syndrome)", d: "Triple X Syndrome (47, XXX)" }, correct: "c" },
+            { q: "Edwards Syndrome is a severe developmental disorder caused by Trisomy of which specific chromosome?", options: { a: "Chromosome 5", b: "Chromosome 13", c: "Chromosome 18", d: "Chromosome 21" }, correct: "c" },
+            { q: "Which cytogenetic technique utilizes fluorescent probes that bind to specific target regions of the chromosome to diagnose deletions or duplications?", options: { a: "Karyotyping", b: "Chromosomal Microarray", c: "Fluorescence In Situ Hybridization (FISH)", d: "DNA Sequencing" }, correct: "c" },
+            { q: "The codon ATG (or its mRNA equivalent) codes for Methionine and also serves what other critical function?", options: { a: "Signaling a premature stop", b: "Initiating protein synthesis (start codon)", c: "Splicing out introns", d: "Regulating telomere length" }, correct: "b" },
+            { q: "Sickle Cell Anemia, an autosomal recessive disorder, is caused by a point mutation in which specific gene?", options: { a: "CFTR gene", b: "HTT gene", c: "HBB gene", d: "CYP450 gene" }, correct: "c" },
+            { q: "Huntington's Disease is classified as an Autosomal Dominant disorder because:", options: { a: "It is linked to the X chromosome", b: "Two copies of the altered gene are required", c: "It only manifests in males", d: "A single copy of the altered gene is sufficient to cause the disease" }, correct: "d" },
+            { q: "Glycogen Storage Diseases (GSDs) are metabolic disorders resulting from abnormal glycogen storage, fundamentally leading to problems with:", options: { a: "Lipid metabolism", b: "Cellular energy production", c: "Ammonia detoxification", d: "Nucleic acid synthesis" }, correct: "b" },
+            { q: "Transcription Factors are a category of regulatory elements that primarily control which stage of gene expression?", options: { a: "Translation (mRNA to Protein)", b: "Post-translational modification", c: "Transcription (DNA to RNA)", d: "DNA Replication" }, correct: "c" },
+            { q: "Mitosis is the process of cell division by which somatic cells divide, resulting in:", options: { a: "Four haploid cells", b: "Two genetically identical daughter cells", c: "Cells with half the chromosome number", d: "Gametes for sexual reproduction" }, correct: "b" },
+            { q: "Triple X Syndrome (47, XXX) in females typically has a clinical presentation that is:", options: { a: "Characterized by severe neurological impairment", b: "Often mild or asymptomatic, sometimes with learning difficulties", c: "Similar to Turner Syndrome", d: "Associated with low birth weight and organ malformations" }, correct: "b" },
+            { q: "Charcot-Marie-Tooth Disease Type 1A is a genetic disorder caused by a duplication of the PMP22 gene on chromosome 17, which is a structural abnormality leading to:", options: { a: "A missing copy of certain genes", b: "An extra copy of certain genes", c: "A chromosome segment being reversed", d: "A transfer of genetic material between non-homologous chromosomes" }, correct: "b" },
+            { q: "Which environmental factors are explicitly mentioned as being able to cause epigenetic changes that affect an individual’s health?", options: { a: "Radiation and chemical exposure", b: "Diet, stress, and environmental pollution", c: "UV light exposure and infectious agents", d: "Errors during DNA replication" }, correct: "b" },
+            { q: "The term used to describe the state of having only a single copy of a gene (as seen in males for genes on the X chromosome) is:", options: { a: "Homozygous", b: "Monosomy", c: "Hemizygous", d: "Heterozygous" }, correct: "c" },
+            { q: "The enzyme deficiency that causes Tay-Sachs disease is the lack of:", options: { a: "Glucocerebrosidase", b: "Hexosaminidase A", c: "Phenylalanine Hydroxylase", d: "Iduronate-2-sulfatase" }, correct: "b" },
+            { q: "Cystic Fibrosis is caused by a mutation in the CFTR gene, resulting in which primary physical characteristic?", options: { a: "Accumulation of lipid in nerve cells", b: "Production of thick mucus, affecting lungs and digestion", c: "Progressive neurological degeneration", d: "Abnormal hemoglobin structure" }, correct: "b" },
+            { q: "Genetic variants in the Cytochrome P450 (CYP450) gene family are significant in pharmacogenomics because they directly affect the metabolism of:", options: { a: "Ammonia in the urea cycle", b: "Glycogen in the liver", c: "Drugs like Warfarin and certain antidepressants", d: "Lactose in the digestive system" }, correct: "c" },
+            { q: "An inversion that does NOT involve the centromere (i.e., both breaks occur on the same chromosome arm) is specifically referred to as a:", options: { a: "Pericentric inversion", b: "Paracentric inversion", c: "Reciprocal translocation", d: "Robertsonian translocation" }, correct: "b" },
+            { q: "The specific nucleotide repeat expansion that causes Huntington’s Disease is:", options: { a: "CTG repeat", b: "CAG repeat", c: "GAA repeat", d: "CGG repeat" }, correct: "b" },
+            { q: "Cytogenetics is defined as the study of chromosomes and its abnormalities. Which traditional diagnostic method is central to this field?", options: { a: "ELISA", b: "Karyotyping", c: "Gene sequencing", d: "Polymerase Chain Reaction (PCR)" }, correct: "b" },
+            { q: "Which enzyme is responsible for joining the Okazaki fragments together on the lagging strand during DNA replication?", options: { a: "Helicase", b: "Primase", c: "DNA Polymerase", d: "Ligase" }, correct: "d" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const totalQuestions = questionsData.length;
+        let userAnswers = new Array(totalQuestions).fill(null);
+
+        // UI Elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionContainer = document.getElementById('question-container');
+        const reviewContainer = document.getElementById('review-container');
+        const currentQNum = document.getElementById('current-q-num');
+        const totalQNum = document.getElementById('total-q-num');
+        const progressBar = document.getElementById('progress-bar');
+        const backScoreBtn = document.getElementById('back-score-btn');
+        const questionCounter = document.getElementById('question-counter');
+        const nameInput = document.getElementById('username');
+        const nameError = document.getElementById('name-error');
+        const resultStudentName = document.getElementById('result-student-name');
+
+        function startQuiz() {
+            const name = nameInput.value.trim();
+            if(!name) {
+                nameError.classList.remove('hidden');
+                return;
+            }
+            nameError.classList.add('hidden');
+            
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            totalQNum.innerText = totalQuestions;
+            loadSingleQuestion(0);
+        }
+
+        function loadSingleQuestion(index) {
+            currentQuestionIndex = index;
+            const data = questionsData[index];
+            
+            currentQNum.innerText = index + 1;
+            progressBar.style.width = `${((index) / totalQuestions) * 100}%`;
+
+            // Clear previous content
+            questionContainer.innerHTML = '';
+
+            // Create Question HTML
+            const qTitle = document.createElement('h2');
+            qTitle.className = "text-lg md:text-xl font-bold mb-6 text-white leading-relaxed";
+            qTitle.innerText = `${index + 1}. ${data.q}`;
+            questionContainer.appendChild(qTitle);
+
+            const optsDiv = document.createElement('div');
+            optsDiv.className = "space-y-3 text-sm md:text-base mb-6";
+            
+            for (const [key, value] of Object.entries(data.options)) {
+                const label = document.createElement('label');
+                label.className = `option-label interactive flex items-center p-4 rounded-lg relative overflow-hidden group`;
+                
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `q-${index}`;
+                input.value = key;
+                
+                if (userAnswers[index]) {
+                    input.checked = (userAnswers[index] === key);
+                    label.classList.remove('interactive');
+                    label.classList.add('cursor-default');
+                    input.disabled = true;
+                } else {
+                    input.onchange = () => handleAnswer(key);
+                }
+
+                const indicator = document.createElement('div');
+                indicator.className = `w-6 h-6 rounded-full border-2 border-gray-500 mr-4 flex items-center justify-center transition-colors flex-shrink-0`;
+                indicator.innerHTML = `<div class="w-3 h-3 rounded-full bg-white opacity-0 transition-opacity"></div>`;
+                
+                if (userAnswers[index] === key) {
+                    indicator.style.borderColor = '#3b82f6';
+                    indicator.style.backgroundColor = '#1e3a8a';
+                    indicator.firstElementChild.style.opacity = '1';
+                }
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'text-gray-200 font-medium';
+                textSpan.innerText = `${key}. ${value}`;
+
+                label.appendChild(input);
+                label.appendChild(indicator);
+                label.appendChild(textSpan);
+                optsDiv.appendChild(label);
+            }
+            questionContainer.appendChild(optsDiv);
+        }
+
+        function handleAnswer(selectedKey) {
+            userAnswers[currentQuestionIndex] = selectedKey;
+            
+            // Update styles immediately
+            const inputs = document.getElementsByName(`q-${currentQuestionIndex}`);
+            inputs.forEach(input => {
+                input.disabled = true; // Lock answer
+                input.parentElement.classList.remove('interactive');
+                input.parentElement.classList.add('cursor-default');
+                
+                const divIndicator = input.nextElementSibling;
+                const dot = divIndicator.firstElementChild;
+                if(input.checked) {
+                    divIndicator.style.borderColor = '#3b82f6';
+                    divIndicator.style.backgroundColor = '#1e3a8a';
+                    dot.style.opacity = '1';
+                }
+            });
+
+            // Auto-advance after 150ms (Fast)
+            setTimeout(() => {
+                if (currentQuestionIndex < totalQuestions - 1) {
+                    loadSingleQuestion(currentQuestionIndex + 1);
+                } else {
+                    finishQuiz();
+                }
+            }, 150);
+        }
+
+        function finishQuiz() {
+            score = 0;
+            questionsData.forEach((q, idx) => {
+                if (userAnswers[idx] === q.correct) score += 2;
+            });
+
+            // Set Student Name in Result Screen
+            const studentName = nameInput.value;
+            resultStudentName.innerText = studentName;
+
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            const finalScoreEl = document.getElementById('final-score');
+            const resultMsg = document.getElementById('result-message');
+            const resultSubMsg = document.getElementById('result-submessage');
+            const scoreCircle = document.getElementById('score-circle');
+            
+            finalScoreEl.innerText = score;
+            const maxScore = totalQuestions * 2;
+
+            if (score === maxScore) {
+                resultMsg.innerText = "أشكر الله";
+                resultMsg.className = "text-2xl md:text-3xl font-bold mb-4 text-green-400";
+                resultSubMsg.innerText = "أشكر الله (لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ)";
+                scoreCircle.className = "mb-6 p-6 bg-gray-800 rounded-full border-4 glow-green";
+            } else if (score >= maxScore * 0.8) {
+                resultMsg.innerText = "جيد جداً!";
+                resultMsg.className = "text-2xl md:text-3xl font-bold mb-4 text-blue-400";
+                resultSubMsg.innerText = "أداء ممتاز، استمر في التقدم.";
+                scoreCircle.className = "mb-6 p-6 bg-gray-800 rounded-full border-4 border-blue-500";
+            } else {
+                resultMsg.innerText = "انتهى الاختبار";
+                resultMsg.className = "text-2xl md:text-3xl font-bold mb-4 text-yellow-400";
+                resultSubMsg.innerText = "راجع أخطاءك لتتعلم منها (إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ)";
+                scoreCircle.className = "mb-6 p-6 bg-gray-800 rounded-full border-4 border-yellow-500";
+            }
+        }
+
+        function reviewAnswers() {
+            // Switch to Quiz View but in Review Mode
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            // Hide single question mode elements
+            questionContainer.classList.add('hidden');
+            questionCounter.innerText = "مراجعة الإجابات";
+            
+            // Show review elements
+            reviewContainer.classList.remove('hidden');
+            backScoreBtn.classList.remove('hidden');
+            reviewContainer.innerHTML = ''; // Clear prev review
+
+            // Build ALL questions list
+            questionsData.forEach((data, index) => {
+                const qBlock = document.createElement('div');
+                qBlock.className = "bg-gray-800 p-6 rounded-xl border border-gray-700";
+                
+                const qTitle = document.createElement('h3');
+                qTitle.className = "text-lg font-bold text-white mb-4 ltr-text";
+                qTitle.innerText = `${index + 1}. ${data.q}`;
+                qBlock.appendChild(qTitle);
+
+                const optsDiv = document.createElement('div');
+                optsDiv.className = "space-y-2 ltr-text";
+
+                const userAns = userAnswers[index];
+                const correctAns = data.correct;
+
+                for (const [key, value] of Object.entries(data.options)) {
+                    const optDiv = document.createElement('div');
+                    optDiv.className = "p-3 rounded-lg border flex justify-between items-center";
+                    
+                    let statusIcon = "";
+                    
+                    // Determine styling
+                    if (key === correctAns) {
+                        // This is the correct answer -> GREEN
+                        optDiv.className += " correct-answer";
+                        statusIcon = "✅";
+                    } else if (key === userAns && key !== correctAns) {
+                        // This is wrong answer selected by user -> RED
+                        optDiv.className += " wrong-answer";
+                        statusIcon = "❌";
+                    } else {
+                        // Normal option
+                        optDiv.className += " border-gray-600 bg-gray-700/50 text-gray-400";
+                    }
+
+                    const textSpan = document.createElement('span');
+                    textSpan.innerText = `${key}. ${value}`;
+                    optDiv.appendChild(textSpan);
+
+                    if(statusIcon) {
+                        const iconSpan = document.createElement('span');
+                        iconSpan.innerText = statusIcon;
+                        optDiv.appendChild(iconSpan);
+                    }
+
+                    optsDiv.appendChild(optDiv);
+                }
+                qBlock.appendChild(optsDiv);
+                reviewContainer.appendChild(qBlock);
+            });
+        }
+
+        function showScoreScreen() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
