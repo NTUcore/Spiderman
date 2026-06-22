@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الدخول</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; transition: background-color 0.3s, color 0.3s; margin: 0; padding: 0; overflow-x: hidden; }
+        
+        .dark-mode { background-color: #0a0a0a; color: #ffffff; }
+        .light-mode { background-color: #f8fafc; color: #1e293b; }
+        
+        .fire-red { color: #ff4500; }
+        .fire-blue { color: #00bfff; }
+        .bg-fire-red { background-color: #ff4500; }
+        .bg-fire-blue { background-color: #00bfff; }
+        
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .light-mode .glass { background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        input, select, textarea { 
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+            color: #ffffff !important; 
+            background-color: rgba(255, 255, 255, 0.05) !important; 
+        }
+        .light-mode input, .light-mode select, .light-mode textarea { 
+            border: 1px solid rgba(0, 0, 0, 0.2) !important; 
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        
+        .btn-hover { transition: all 0.3s ease; cursor: pointer; }
+        .btn-hover:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        
+        .tab-btn.active { border-bottom: 3px solid #ff4500; color: #ff4500; }
+        .loading-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #00bfff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .main-title-container {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            text-align: center;
+            padding-bottom: 25px; 
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Branding -->
+    <div class="fixed top-8 left-8 z-50 text-left pointer-events-none">
+        <div class="font-black text-lg md:text-3xl tracking-tighter mb-1 uppercase" style="color: #00bfff;">NORTHERN TECHNICAL UNIVERSITY</div>
+        <div class="font-black text-lg md:text-3xl" style="color: #ff4500;">الكلية الصحية والطبية كركوك</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="fixed top-8 right-8 z-50 flex gap-3">
+        <button id="themeBtn" class="w-12 h-12 rounded-full glass flex items-center justify-center btn-hover shadow-lg">☀️</button>
+        <button id="backBtn" class="hidden w-12 h-12 rounded-full glass flex items-center justify-center btn-hover shadow-lg">
+            <i class="fas fa-arrow-right text-xl"></i>
+        </button>
+    </div>
+
+    <div id="app" class="min-h-screen flex items-center justify-center p-4">
+        
+        <!-- Home View -->
+        <div id="view-home" class="w-full max-w-2xl text-center">
+            <div class="main-title-container">
+                <h1 class="text-3xl md:text-4xl font-black pb-4" style="background: linear-gradient(to left, #ff4500, #00bfff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;">بوابة الدخول</h1>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-32">
+                <button onclick="switchView('student-entry')" class="p-8 bg-fire-blue text-white rounded-2xl btn-hover shadow-xl flex flex-col items-center">
+                    <i class="fas fa-user-graduate text-3xl mb-3"></i>
+                    <span class="text-lg font-bold">دخول الطالب</span>
+                </button>
+                <button onclick="switchView('admin-login')" class="p-8 bg-fire-red text-white rounded-2xl btn-hover shadow-xl flex flex-col items-center">
+                    <i class="fas fa-user-shield text-3xl mb-3"></i>
+                    <span class="text-lg font-bold">لوحة المسؤول</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Flow View -->
+        <div id="view-student-entry" class="hidden w-full max-w-md glass p-8 rounded-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-center fire-blue">استعلام النتائج</h2>
+            <div id="stu-step-1" class="space-y-4">
+                <label class="block text-sm opacity-70">اكتب اسمك كما في سجل الأسماء بالكامل:</label>
+                <input type="text" id="stu-name" placeholder="" class="w-full p-4 rounded-xl outline-none">
+                <button id="btn-to-step-2" class="w-full py-4 bg-fire-blue text-white rounded-xl font-bold btn-hover">الخطوة التالية</button>
+            </div>
+            <div id="stu-step-2" class="hidden space-y-4">
+                <select id="stu-dept" class="w-full p-4 rounded-xl outline-none">
+                    <option value="">اختر القسم</option>
+                    <option value="مختبرات طبية">مختبرات طبية</option>
+                    <option value="تغذية علاجية">تغذية علاجية</option>
+                    <option value="الكلية صناعية">الكلية صناعية</option>
+                </select>
+                <select id="stu-level" class="w-full p-4 rounded-xl outline-none">
+                    <option value="">المرحلة الدراسية</option>
+                    <option value="اولى">اولى</option>
+                    <option value="ثانية">ثانية</option>
+                    <option value="ثالثة">ثالثة</option>
+                    <option value="رابعة">رابعة</option>
+                </select>
+                <select id="stu-type" class="w-full p-4 rounded-xl outline-none">
+                    <option value="">نوع الدراسة</option>
+                    <option value="صباحي">صباحي</option>
+                    <option value="مسائي">مسائي</option>
+                </select>
+                <button id="btn-to-step-3" class="w-full py-4 bg-fire-blue text-white rounded-xl font-bold btn-hover">تحقق من السجل</button>
+            </div>
+            <div id="stu-step-3" class="hidden space-y-4 text-center">
+                <div id="auth-message" class="mb-4 font-bold text-lg fire-blue"></div>
+                <div id="pass-fields" class="space-y-4"></div>
+                <button id="btn-final-login" class="w-full py-4 bg-fire-blue text-white rounded-xl font-bold btn-hover mt-4">فتح النتائج</button>
+            </div>
+        </div>
+
+        <!-- Results Display View -->
+        <div id="view-student-results" class="hidden w-full max-w-2xl glass p-8 rounded-2xl">
+            <div class="border-b border-gray-500/20 pb-4 mb-6 flex justify-between items-start text-right">
+                <div>
+                    <h2 id="res-name" class="text-2xl font-bold fire-blue mb-2"></h2>
+                    <p id="res-info" class="text-sm opacity-80 leading-loose font-bold"></p>
+                </div>
+            </div>
+            <div id="results-list" class="space-y-3"></div>
+        </div>
+
+        <!-- Admin Login View -->
+        <div id="view-admin-login" class="hidden w-full max-w-md glass p-8 rounded-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-center fire-red">دخول الإدارة</h2>
+            <div class="space-y-4">
+                <input type="text" id="adm-user" placeholder="اسم المستخدم" class="w-full p-4 rounded-xl outline-none">
+                <input type="password" id="adm-pass" placeholder="كلمة المرور" class="w-full p-4 rounded-xl outline-none">
+                <button id="btn-admin-login" class="w-full py-4 bg-fire-red text-white rounded-xl font-bold btn-hover">دخول</button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard View -->
+        <div id="view-admin-dash" class="hidden w-full max-w-6xl glass p-6 rounded-2xl">
+            <div class="flex gap-4 border-b border-gray-500/20 mb-6 overflow-x-auto">
+                <button onclick="switchAdminTab('upload')" id="tab-upload" class="tab-btn active pb-3 px-4 font-bold whitespace-nowrap">رفع نتائج</button>
+                <button onclick="switchAdminTab('manage')" id="tab-manage" class="tab-btn pb-3 px-4 font-bold whitespace-nowrap">مسح مواد</button>
+                <button onclick="switchAdminTab('members')" id="tab-members" class="tab-btn pb-3 px-4 font-bold whitespace-nowrap">سجل الطلاب</button>
+            </div>
+            <div id="admin-upload-section" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <input type="text" id="adm-subject" placeholder="اسم المادة" class="w-full p-3 rounded-lg outline-none">
+                    <input type="number" id="adm-total-grade" placeholder="الدرجة من" class="w-full p-3 rounded-lg outline-none">
+                    <select id="adm-dept" class="w-full p-3 rounded-lg outline-none">
+                        <option value="مختبرات طبية">مختبرات طبية</option>
+                        <option value="تغذية علاجية">تغذية علاجية</option>
+                        <option value="الكلية صناعية">الكلية صناعية</option>
+                    </select>
+                    <select id="adm-level" class="w-full p-3 rounded-lg outline-none">
+                        <option value="اولى">اولى</option>
+                        <option value="ثانية">ثانية</option>
+                        <option value="ثالثة">ثالثة</option>
+                        <option value="رابعة">رابعة</option>
+                    </select>
+                    <select id="adm-type" class="w-full p-3 rounded-lg outline-none">
+                        <option value="صباحي">صباحي</option>
+                        <option value="مسائي">مسائي</option>
+                    </select>
+                </div>
+                <textarea id="raw-data" rows="10" placeholder="الصق الأسماء والدرجات هنا..." class="w-full p-4 rounded-xl font-mono text-sm"></textarea>
+                <button id="btn-process" class="w-full py-4 bg-fire-red text-white rounded-xl font-bold btn-hover">نشر النتائج</button>
+            </div>
+            <div id="admin-manage-section" class="hidden space-y-4">
+                <div id="materials-log" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto p-2"></div>
+            </div>
+            <div id="admin-members-section" class="hidden space-y-4">
+                <div id="members-log" class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto p-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATLALPtfb-wpE4F6wKNDsCGZy62yCojPY",
+            authDomain: "mlt56-2f41f.firebaseapp.com",
+            projectId: "mlt56-2f41f",
+            storageBucket: "mlt56-2f41f.firebasestorage.app",
+            messagingSenderId: "242358377031",
+            appId: "1:242358377031:web:a93c354cf2ee109b0a2f62"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let isDarkMode = true;
+        let isNewStudent = false;
+
+        window.switchView = (viewId) => {
+            ['home', 'student-entry', 'student-results', 'admin-login', 'admin-dash'].forEach(v => 
+                document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            const backBtn = document.getElementById('backBtn');
+            if (viewId === 'home') backBtn.classList.add('hidden');
+            else backBtn.classList.remove('hidden');
+        };
+
+        document.getElementById('backBtn').onclick = () => {
+            switchView('home');
+            document.getElementById('stu-step-1').classList.remove('hidden');
+            document.getElementById('stu-step-2').classList.add('hidden');
+            document.getElementById('stu-step-3').classList.add('hidden');
+            document.getElementById('stu-name').value = '';
+        };
+
+        window.switchAdminTab = (tab) => {
+            ['upload', 'manage', 'members'].forEach(t => document.getElementById(`admin-${t}-section`).classList.add('hidden'));
+            ['upload', 'manage', 'members'].forEach(t => document.getElementById(`tab-${t}`).classList.remove('active'));
+            document.getElementById(`admin-${tab}-section`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            if(tab === 'manage') loadMaterialsLog();
+            if(tab === 'members') loadMembersLog();
+        };
+
+        document.getElementById('themeBtn').onclick = () => {
+            isDarkMode = !isDarkMode;
+            document.body.className = isDarkMode ? 'dark-mode' : 'light-mode';
+            document.getElementById('themeBtn').innerText = isDarkMode ? '☀️' : '🌙';
+        };
+
+        document.getElementById('btn-to-step-2').onclick = () => {
+            const name = document.getElementById('stu-name').value.trim();
+            if (name.split(/\s+/).filter(part => part.length > 0).length < 3) return alert("يرجى إدخال الاسم الكامل");
+            document.getElementById('stu-step-1').classList.add('hidden');
+            document.getElementById('stu-step-2').classList.remove('hidden');
+        };
+
+        document.getElementById('btn-to-step-3').onclick = async () => {
+            const name = document.getElementById('stu-name').value.trim();
+            const btn = document.getElementById('btn-to-step-3');
+            btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>';
+            try {
+                const docSnap = await getDoc(doc(db, "students", name));
+                const passContainer = document.getElementById('pass-fields');
+                passContainer.innerHTML = '';
+                document.getElementById('stu-step-2').classList.add('hidden');
+                document.getElementById('stu-step-3').classList.remove('hidden');
+                if (docSnap.exists()) {
+                    isNewStudent = false;
+                    document.getElementById('auth-message').innerText = "أدخل الرمز السري الخاص بك:";
+                    passContainer.innerHTML = `<input type="password" id="pass-main" placeholder="إدخال الرمز" class="w-full p-4 rounded-xl outline-none text-center font-bold">`;
+                } else {
+                    isNewStudent = true;
+                    document.getElementById('auth-message').innerText = "مستخدم جديد، قم بإنشاء رمز سري:";
+                    passContainer.innerHTML = `<input type="password" id="pass-new" placeholder="إنشاء رمز سري" class="w-full p-4 rounded-xl outline-none text-center font-bold mb-3"><input type="password" id="pass-confirm" placeholder="تأكيد الرمز" class="w-full p-4 rounded-xl outline-none text-center font-bold">`;
+                }
+            } catch (e) { alert("خطأ في الاتصال"); }
+            btn.disabled = false; btn.innerText = "تحقق من السجل";
+        };
+
+        document.getElementById('btn-final-login').onclick = async () => {
+            const name = document.getElementById('stu-name').value.trim();
+            if (isNewStudent) {
+                const p1 = document.getElementById('pass-new').value.trim();
+                const p2 = document.getElementById('pass-confirm').value.trim();
+                if (p1 !== p2 || !p1) return alert("الرمزان غير متطابقين");
+                await setDoc(doc(db, "students", name), { name, pass: p1.toUpperCase(), dept: document.getElementById('stu-dept').value, level: document.getElementById('stu-level').value, type: document.getElementById('stu-type').value });
+                loadStudentResults(name);
+            } else {
+                const p = document.getElementById('pass-main').value.trim();
+                const snap = await getDoc(doc(db, "students", name));
+                if (snap.data().pass.toUpperCase() === p.toUpperCase()) loadStudentResults(name);
+                else alert("الرمز غير صحيح");
+            }
+        };
+
+        async function loadStudentResults(name) {
+            const snap = await getDoc(doc(db, "students", name));
+            document.getElementById('res-name').innerText = name;
+            document.getElementById('res-info').innerHTML = `القسم : ${snap.data().dept}<br>المرحلة : ${snap.data().level}<br>نوع دراسي : ${snap.data().type}`;
+            const q = query(collection(db, "results"), where("name", "==", name));
+            const querySnap = await getDocs(q);
+            const list = document.getElementById('results-list');
+            list.innerHTML = '';
+            querySnap.forEach(d => {
+                const data = d.data();
+                const card = document.createElement('div');
+                card.className = "p-5 rounded-xl glass border-r-4 border-fire-blue flex justify-between items-center";
+                const gradeDisplay = data.totalGrade ? `${data.grade}/${data.totalGrade}` : data.grade;
+                card.innerHTML = `<div><div class="font-bold text-lg">${data.subject}</div></div><div class="text-3xl font-black fire-red" dir="ltr">${gradeDisplay}</div>`;
+                list.appendChild(card);
+            });
+            switchView('student-results');
+        }
+
+        document.getElementById('btn-admin-login').onclick = () => {
+            if (document.getElementById('adm-user').value === 'NTU' && document.getElementById('adm-pass').value === 'NTU_2026Co-01') switchView('admin-dash');
+            else alert("خطأ في بيانات الدخول");
+        };
+
+        document.getElementById('btn-process').onclick = async () => {
+            const raw = document.getElementById('raw-data').value;
+            const sub = document.getElementById('adm-subject').value;
+            const totalGrade = document.getElementById('adm-total-grade').value;
+            const btn = document.getElementById('btn-process');
+            btn.innerHTML = '<span class="loading-spinner"></span>';
+            const lines = raw.split('\n').filter(l => l.trim());
+            for (let l of lines) {
+                let p = l.split(/[,،]/).map(s => s.trim());
+                if (p.length >= 2) {
+                    await setDoc(doc(db, "results", `${p[0]}_${sub}`), { 
+                        name: p[0], 
+                        grade: p[1], 
+                        subject: sub, 
+                        totalGrade: totalGrade, 
+                        dept: document.getElementById('adm-dept').value, 
+                        level: document.getElementById('adm-level').value, 
+                        type: document.getElementById('adm-type').value 
+                    });
+                }
+            }
+            btn.innerText = "نشر النتائج";
+            alert("تم نشر النتائج بنجاح");
+        };
+
+        async function loadMaterialsLog() {
+            const log = document.getElementById('materials-log');
+            log.innerHTML = '<div class="col-span-full text-center py-4">جاري التحميل...</div>';
+            try {
+                const snap = await getDocs(collection(db, "results"));
+                const subjects = new Set();
+                snap.forEach(d => subjects.add(d.data().subject));
+                
+                log.innerHTML = '';
+                if(subjects.size === 0) log.innerHTML = '<div class="col-span-full text-center py-4">لا توجد مواد مرفوعة حالياً</div>';
+                
+                subjects.forEach(subName => {
+                    const d = document.createElement('div');
+                    d.className = "p-4 glass rounded-xl border border-gray-500/10";
+                    d.innerHTML = `
+                        <div class="font-bold fire-blue mb-3">${subName}</div>
+                        <button class="w-full py-2 bg-fire-red text-white rounded-lg text-xs font-bold btn-hover" 
+                                onclick="window.confirmDeleteSubject('${subName}')">
+                            <i class="fas fa-trash-alt ml-1"></i> مسح المادة نهائياً
+                        </button>`;
+                    log.appendChild(d);
+                });
+            } catch (e) {
+                log.innerHTML = '<div class="col-span-full text-center py-4 text-red-500">حدث خطأ أثناء جلب البيانات</div>';
+            }
+        }
+
+        window.confirmDeleteSubject = async (subjectName) => {
+            if(confirm(`تحذير: هل أنت متأكد من حذف مادة (${subjectName}) لجميع الطلاب؟`)) {
+                try {
+                    const q = query(collection(db, "results"), where("subject", "==", subjectName));
+                    const snap = await getDocs(q);
+                    
+                    const deletePromises = [];
+                    snap.forEach(docSnap => {
+                        deletePromises.push(deleteDoc(doc(db, "results", docSnap.id)));
+                    });
+                    
+                    await Promise.all(deletePromises);
+                    alert(`تم حذف مادة ${subjectName} بنجاح`);
+                    loadMaterialsLog();
+                } catch (e) {
+                    alert("خطأ أثناء محاولة الحذف: " + e.message);
+                }
+            }
+        };
+
+        async function loadMembersLog() {
+            const log = document.getElementById('members-log');
+            log.innerHTML = '<div class="col-span-full text-center py-4">جاري تحميل السجل...</div>';
+            const snap = await getDocs(collection(db, "students"));
+            log.innerHTML = '';
+            snap.forEach(d => {
+                const data = d.data();
+                const card = document.createElement('div');
+                card.className = "p-4 glass rounded-xl border border-gray-500/10";
+                card.innerHTML = `<div class="font-bold text-sm">${data.name}</div><div class="text-[10px] opacity-60">${data.dept}</div><div class="mt-2 text-xs font-bold fire-blue">الرمز: ${data.pass}</div>`;
+                log.appendChild(card);
+            });
+        }
+
+        window.switchAdminTab = switchAdminTab;
+        window.switchView = switchView;
+    </script>
+</body>
+</html>
