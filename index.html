@@ -13,7 +13,6 @@
         .dark-mode { background-color: #0a0a0a; color: #ffffff; }
         .light-mode { background-color: #f1f5f9; color: #1e293b; }
         
-        /* الألوان في الوضع الليلي */
         .fire-red { color: #ff4500 !important; }
         .fire-blue { color: #00bfff !important; }
         .bg-fire-red { background-color: #ff4500; }
@@ -22,7 +21,6 @@
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; }
         .glass span, .glass div, .glass p, .glass label { color: #ffffff; }
         
-        /* معالجة الألوان والخطوط للوضع النهاري لمنع تداخل واختفاء النصوص */
         .light-mode .glass { 
             background: #ffffff !important; 
             border: 1px solid rgba(0, 0, 0, 0.1) !important; 
@@ -33,7 +31,6 @@
             color: #0f172a !important;
         }
         
-        /* تباين ألوان التقديرات والشعارات في الوضع النهاري لتكون واضحة جداً */
         .light-mode .fire-blue, .light-mode .glass .fire-blue { 
             color: #0284c7 !important; 
         }
@@ -46,6 +43,34 @@
         .light-mode .tab-btn.active { 
             color: #b91c1c !important; 
             border-bottom: 3px solid #b91c1c !important; 
+        }
+        
+        .gold-card { 
+            background: rgba(212, 175, 55, 0.08) !important; 
+            border: 1px solid rgba(212, 175, 55, 0.3) !important; 
+            border-right: 5px solid #d4af37 !important; 
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.05);
+            color: #ffffff !important;
+        }
+        .gold-card span, .gold-card div {
+            color: #ffffff !important;
+        }
+        .gold-card .gold-highlight {
+            color: #ffd700 !important;
+        }
+        
+        .light-mode .gold-card { 
+            background: rgba(212, 175, 55, 0.15) !important; 
+            border: 1px solid rgba(184, 134, 11, 0.4) !important; 
+            border-right: 5px solid #b8860b !important; 
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.12) !important;
+            color: #451a03 !important; 
+        }
+        .light-mode .gold-card span, .light-mode .gold-card div {
+            color: #451a03 !important;
+        }
+        .light-mode .gold-card .gold-highlight {
+            color: #b45309 !important; 
         }
         
         input, select, textarea { 
@@ -379,15 +404,15 @@
             querySnap.forEach(d => {
                 const data = d.data();
                 const card = document.createElement('div');
-                card.className = "p-5 rounded-xl glass border-r-4 border-fire-blue flex justify-between items-center";
+                card.className = "p-5 rounded-xl gold-card flex justify-between items-center transition-all duration-300";
                 
                 const appreciation = getAppreciation(data.grade, data.totalGrade);
                 
-                // Render with format: [اسم المادة / التقدير] with no background boxes to prevent light/dark conflicts
+                // Render with format: [اسم المادة / التقدير] with golden text highlights
                 const textLayout = `<div class="font-bold text-lg md:text-xl text-right leading-relaxed w-full">
                     <span>${data.subject}</span>
                     <span class="opacity-40 mx-2">/</span>
-                    <span class="fire-blue font-black text-xl">${appreciation}</span>
+                    <span class="gold-highlight font-black text-xl">${appreciation}</span>
                 </div>`;
                 
                 card.innerHTML = textLayout;
@@ -458,7 +483,6 @@
             }
         }
 
-        // Updated optimized delete trigger mechanism (Optimistic UI + Batch commits)
         window.confirmDeleteSubject = async (btnElement, subjectName) => {
             customConfirm(`تحذير: هل أنت متأكد من حذف مادة (${subjectName}) لجميع الطلاب؟`, async () => {
                 const parentCard = btnElement ? btnElement.closest('.glass') : null;
