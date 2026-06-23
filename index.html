@@ -7,19 +7,46 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap');
         body { font-family: 'Cairo', sans-serif; transition: background-color 0.3s, color 0.3s; margin: 0; padding: 0; overflow-x: hidden; }
         
         .dark-mode { background-color: #0a0a0a; color: #ffffff; }
-        .light-mode { background-color: #f8fafc; color: #1e293b; }
+        .light-mode { background-color: #f1f5f9; color: #1e293b; }
         
-        .fire-red { color: #ff4500; }
-        .fire-blue { color: #00bfff; }
+        /* الألوان في الوضع الليلي */
+        .fire-red { color: #ff4500 !important; }
+        .fire-blue { color: #00bfff !important; }
         .bg-fire-red { background-color: #ff4500; }
         .bg-fire-blue { background-color: #00bfff; }
         
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .light-mode .glass { background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; }
+        .glass span, .glass div, .glass p, .glass label { color: #ffffff; }
+        
+        /* معالجة الألوان والخطوط للوضع النهاري لمنع تداخل واختفاء النصوص */
+        .light-mode .glass { 
+            background: #ffffff !important; 
+            border: 1px solid rgba(0, 0, 0, 0.1) !important; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            color: #0f172a !important;
+        }
+        .light-mode .glass span, .light-mode .glass div, .light-mode .glass p, .light-mode .glass label, .light-mode .glass h2 {
+            color: #0f172a !important;
+        }
+        
+        /* تباين ألوان التقديرات والشعارات في الوضع النهاري لتكون واضحة جداً */
+        .light-mode .fire-blue, .light-mode .glass .fire-blue { 
+            color: #0284c7 !important; 
+        }
+        .light-mode .fire-red, .light-mode .glass .fire-red { 
+            color: #b91c1c !important; 
+        }
+        .light-mode .tab-btn { 
+            color: #64748b !important; 
+        }
+        .light-mode .tab-btn.active { 
+            color: #b91c1c !important; 
+            border-bottom: 3px solid #b91c1c !important; 
+        }
         
         input, select, textarea { 
             border: 1px solid rgba(255, 255, 255, 0.2) !important; 
@@ -27,8 +54,8 @@
             background-color: rgba(255, 255, 255, 0.05) !important; 
         }
         .light-mode input, .light-mode select, .light-mode textarea { 
-            border: 1px solid rgba(0, 0, 0, 0.2) !important; 
-            background-color: #f1f5f9 !important;
+            border: 1px solid rgba(148, 163, 184, 0.5) !important; 
+            background-color: #f8fafc !important;
             color: #0f172a !important;
         }
         
@@ -64,6 +91,26 @@
         <button id="backBtn" class="hidden w-12 h-12 rounded-full glass flex items-center justify-center btn-hover shadow-lg">
             <i class="fas fa-arrow-right text-xl"></i>
         </button>
+    </div>
+
+    <!-- Custom Modal Elements (Safely Intercepts browser dialogs) -->
+    <div id="customAlert" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+        <div class="w-full max-w-md glass p-6 rounded-2xl text-center border-t-4 border-fire-blue shadow-2xl">
+            <h3 class="text-xl font-bold mb-4" id="alertTitle">تنبيه</h3>
+            <p class="mb-6 opacity-90 leading-relaxed" id="alertMessage"></p>
+            <button onclick="closeAlert()" class="px-6 py-2 bg-fire-blue text-white rounded-lg font-bold btn-hover">موافق</button>
+        </div>
+    </div>
+
+    <div id="customConfirm" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+        <div class="w-full max-w-md glass p-6 rounded-2xl text-center border-t-4 border-fire-red shadow-2xl">
+            <h3 class="text-xl font-bold mb-4" id="confirmTitle">تأكيد الإجراء</h3>
+            <p class="mb-6 opacity-90 leading-relaxed" id="confirmMessage"></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirmYesBtn" class="px-6 py-2 bg-fire-red text-white rounded-lg font-bold btn-hover">تأكيد الحذف</button>
+                <button id="confirmNoBtn" class="px-6 py-2 bg-gray-500/20 rounded-lg font-bold btn-hover">إلغاء</button>
+            </div>
+        </div>
     </div>
 
     <div id="app" class="min-h-screen flex items-center justify-center p-4">
@@ -184,7 +231,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyATLALPtfb-wpE4F6wKNDsCGZy62yCojPY",
@@ -200,6 +247,29 @@
 
         let isDarkMode = true;
         let isNewStudent = false;
+
+        // Custom Modal UI handler instead of default alert/confirm in sandboxed frame
+        window.customAlert = function(message) {
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.remove('hidden');
+        }
+
+        window.closeAlert = function() {
+            document.getElementById('customAlert').classList.add('hidden');
+        }
+
+        window.customConfirm = function(message, onConfirm) {
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('customConfirm').classList.remove('hidden');
+            
+            document.getElementById('confirmYesBtn').onclick = () => {
+                document.getElementById('customConfirm').classList.add('hidden');
+                onConfirm();
+            };
+            document.getElementById('confirmNoBtn').onclick = () => {
+                document.getElementById('customConfirm').classList.add('hidden');
+            };
+        }
 
         window.switchView = (viewId) => {
             ['home', 'student-entry', 'student-results', 'admin-login', 'admin-dash'].forEach(v => 
@@ -236,7 +306,7 @@
 
         document.getElementById('btn-to-step-2').onclick = () => {
             const name = document.getElementById('stu-name').value.trim();
-            if (name.split(/\s+/).filter(part => part.length > 0).length < 3) return alert("يرجى إدخال الاسم الكامل");
+            if (name.split(/\s+/).filter(part => part.length > 0).length < 3) return customAlert("يرجى إدخال الاسم الكامل ثلاثياً على الأقل");
             document.getElementById('stu-step-1').classList.add('hidden');
             document.getElementById('stu-step-2').classList.remove('hidden');
         };
@@ -260,7 +330,7 @@
                     document.getElementById('auth-message').innerText = "مستخدم جديد، قم بإنشاء رمز سري:";
                     passContainer.innerHTML = `<input type="password" id="pass-new" placeholder="إنشاء رمز سري" class="w-full p-4 rounded-xl outline-none text-center font-bold mb-3"><input type="password" id="pass-confirm" placeholder="تأكيد الرمز" class="w-full p-4 rounded-xl outline-none text-center font-bold">`;
                 }
-            } catch (e) { alert("خطأ في الاتصال"); }
+            } catch (e) { customAlert("خطأ في الاتصال بقاعدة البيانات"); }
             btn.disabled = false; btn.innerText = "تحقق من السجل";
         };
 
@@ -269,16 +339,34 @@
             if (isNewStudent) {
                 const p1 = document.getElementById('pass-new').value.trim();
                 const p2 = document.getElementById('pass-confirm').value.trim();
-                if (p1 !== p2 || !p1) return alert("الرمزان غير متطابقين");
+                if (p1 !== p2 || !p1) return customAlert("الرمزان غير متطابقين");
                 await setDoc(doc(db, "students", name), { name, pass: p1.toUpperCase(), dept: document.getElementById('stu-dept').value, level: document.getElementById('stu-level').value, type: document.getElementById('stu-type').value });
                 loadStudentResults(name);
             } else {
                 const p = document.getElementById('pass-main').value.trim();
                 const snap = await getDoc(doc(db, "students", name));
                 if (snap.data().pass.toUpperCase() === p.toUpperCase()) loadStudentResults(name);
-                else alert("الرمز غير صحيح");
+                else customAlert("الرمز المدخل غير صحيح");
             }
         };
+
+        // Helper function to calculate student appreciation (التقدير الدراسي)
+        function getAppreciation(gradeValue, totalGradeValue) {
+            let percentage = parseFloat(gradeValue);
+            if (totalGradeValue) {
+                let max = parseFloat(totalGradeValue);
+                if (max > 0) {
+                    percentage = (percentage / max) * 100;
+                }
+            }
+            if (isNaN(percentage)) return "";
+            if (percentage >= 90) return "امتياز";
+            if (percentage >= 80) return "جيد جداً";
+            if (percentage >= 70) return "جيد";
+            if (percentage >= 60) return "متوسط";
+            if (percentage >= 50) return "مقبول";
+            return "راسب";
+        }
 
         async function loadStudentResults(name) {
             const snap = await getDoc(doc(db, "students", name));
@@ -292,8 +380,17 @@
                 const data = d.data();
                 const card = document.createElement('div');
                 card.className = "p-5 rounded-xl glass border-r-4 border-fire-blue flex justify-between items-center";
-                const gradeDisplay = data.totalGrade ? `${data.grade}/${data.totalGrade}` : data.grade;
-                card.innerHTML = `<div><div class="font-bold text-lg">${data.subject}</div></div><div class="text-3xl font-black fire-red" dir="ltr">${gradeDisplay}</div>`;
+                
+                const appreciation = getAppreciation(data.grade, data.totalGrade);
+                
+                // Render with format: [اسم المادة / التقدير] with no background boxes to prevent light/dark conflicts
+                const textLayout = `<div class="font-bold text-lg md:text-xl text-right leading-relaxed w-full">
+                    <span>${data.subject}</span>
+                    <span class="opacity-40 mx-2">/</span>
+                    <span class="fire-blue font-black text-xl">${appreciation}</span>
+                </div>`;
+                
+                card.innerHTML = textLayout;
                 list.appendChild(card);
             });
             switchView('student-results');
@@ -301,7 +398,7 @@
 
         document.getElementById('btn-admin-login').onclick = () => {
             if (document.getElementById('adm-user').value === 'NTU' && document.getElementById('adm-pass').value === 'NTU_2026Co-01') switchView('admin-dash');
-            else alert("خطأ في بيانات الدخول");
+            else customAlert("خطأ في بيانات الدخول، يرجى المحاولة مرة أخرى");
         };
 
         document.getElementById('btn-process').onclick = async () => {
@@ -311,10 +408,14 @@
             const btn = document.getElementById('btn-process');
             btn.innerHTML = '<span class="loading-spinner"></span>';
             const lines = raw.split('\n').filter(l => l.trim());
+            
+            // Using Firebase Batches to upload database items simultaneously
+            const batch = writeBatch(db);
             for (let l of lines) {
                 let p = l.split(/[,،]/).map(s => s.trim());
                 if (p.length >= 2) {
-                    await setDoc(doc(db, "results", `${p[0]}_${sub}`), { 
+                    const resultRef = doc(db, "results", `${p[0]}_${sub}`);
+                    batch.set(resultRef, { 
                         name: p[0], 
                         grade: p[1], 
                         subject: sub, 
@@ -325,8 +426,9 @@
                     });
                 }
             }
+            await batch.commit();
             btn.innerText = "نشر النتائج";
-            alert("تم نشر النتائج بنجاح");
+            customAlert("تم نشر النتائج بنجاح");
         };
 
         async function loadMaterialsLog() {
@@ -342,11 +444,11 @@
                 
                 subjects.forEach(subName => {
                     const d = document.createElement('div');
-                    d.className = "p-4 glass rounded-xl border border-gray-500/10";
+                    d.className = "p-4 glass rounded-xl border border-gray-500/10 transition-all duration-300";
                     d.innerHTML = `
                         <div class="font-bold fire-blue mb-3">${subName}</div>
                         <button class="w-full py-2 bg-fire-red text-white rounded-lg text-xs font-bold btn-hover" 
-                                onclick="window.confirmDeleteSubject('${subName}')">
+                                onclick="window.confirmDeleteSubject(this, '${subName}')">
                             <i class="fas fa-trash-alt ml-1"></i> مسح المادة نهائياً
                         </button>`;
                     log.appendChild(d);
@@ -356,24 +458,34 @@
             }
         }
 
-        window.confirmDeleteSubject = async (subjectName) => {
-            if(confirm(`تحذير: هل أنت متأكد من حذف مادة (${subjectName}) لجميع الطلاب؟`)) {
+        // Updated optimized delete trigger mechanism (Optimistic UI + Batch commits)
+        window.confirmDeleteSubject = async (btnElement, subjectName) => {
+            customConfirm(`تحذير: هل أنت متأكد من حذف مادة (${subjectName}) لجميع الطلاب؟`, async () => {
+                const parentCard = btnElement ? btnElement.closest('.glass') : null;
+                if (parentCard) {
+                    parentCard.style.opacity = '0.3';
+                    parentCard.style.pointerEvents = 'none';
+                }
                 try {
                     const q = query(collection(db, "results"), where("subject", "==", subjectName));
                     const snap = await getDocs(q);
                     
-                    const deletePromises = [];
+                    const batch = writeBatch(db);
                     snap.forEach(docSnap => {
-                        deletePromises.push(deleteDoc(doc(db, "results", docSnap.id)));
+                        batch.delete(docSnap.ref);
                     });
                     
-                    await Promise.all(deletePromises);
-                    alert(`تم حذف مادة ${subjectName} بنجاح`);
+                    await batch.commit();
+                    customAlert(`تم حذف مادة ${subjectName} بنجاح`);
                     loadMaterialsLog();
                 } catch (e) {
-                    alert("خطأ أثناء محاولة الحذف: " + e.message);
+                    if (parentCard) {
+                        parentCard.style.opacity = '1';
+                        parentCard.style.pointerEvents = 'auto';
+                    }
+                    customAlert("خطأ أثناء محاولة الحذف: " + e.message);
                 }
-            }
+            });
         };
 
         async function loadMembersLog() {
